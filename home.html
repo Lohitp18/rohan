@@ -1,0 +1,344 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZAPSAFE - GRIDWATCH Home</title>
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        #mapid {
+            height: 600px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        #poleTableSection {
+            display: none;
+            margin-top: 20px;
+        }
+        .pole-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        .pole-table th, .pole-table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        .pole-table th {
+            background: #202853;
+            color: white;
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="website-title">ZAPSAFE - Gridwatch</div>
+
+            <nav class="sidebar-nav">
+                <a href="#" id="homeBtn" class="nav-item active"><i class="fas fa-home"></i> Home</a>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-item dropdown-toggle" id="poleTagsToggle">
+                        <i class="fas fa-thumbtack"></i> Pole Tags <i class="fas fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu" id="poleTagsMenu"></ul>
+                </div>
+
+                <a href="#" class="nav-item"><i class="fas fa-bell"></i> Active Alerts</a>
+                <a href="#" class="nav-item"><i class="fas fa-chart-line"></i> Reports & Statistics</a>
+                <a href="#" class="nav-item"><i class="fas fa-cogs"></i> Settings</a>
+                <a href="index.html" class="nav-item logout-button"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <h2>ZAPSAFE - GRIDWATCH</h2>
+            </header>
+
+            <!-- Main Grid -->
+            <div id="mainGrid" class="main-grid">
+
+                <section class="map-section" id="mapSection">
+                    <h3>Utility Pole Map</h3>
+                    <div id="mapid"></div>
+                </section>
+
+                <aside class="control-panels" id="controlPanelSection">
+                    <section class="add-pole-section" id="adminAddPole">
+                        <h4>Add New Pole</h4>
+                        <form id="addPoleForm">
+                            <label for="poleId">Pole ID:</label>
+                            <input type="text" id="poleId" required>
+
+                            <label for="latitudeAdd">Latitude:</label>
+                            <input type="text" id="latitudeAdd" required>
+
+                            <label for="longitudeAdd">Longitude:</label>
+                            <input type="text" id="longitudeAdd" required>
+
+                            <button type="submit">Add Pole and Save</button>
+                        </form>
+                    </section>
+
+                    <hr>
+
+                    <section class="locate-pole-section">
+                        <h4>Locate Pole</h4>
+                        <form id="locatePoleForm">
+                            <label>Latitude:</label>
+                            <input type="text" id="latitudeLocate">
+
+                            <label>Longitude:</label>
+                            <input type="text" id="longitudeLocate">
+
+                            <button type="submit">Locate Pole</button>
+                        </form>
+                    </section>
+
+                </aside>
+
+            </div>
+
+            <!-- NEW — FULL WIDTH POLE TABLE -->
+            <section id="poleTableSection">
+                <h3>All Registered Poles</h3>
+                <table class="pole-table" id="poleTable">
+                    <thead>
+                        <tr>
+                            <th>Pole ID</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Tilt</th>
+                            <th>Voltage</th>
+                            <th>Current</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="poleTableBody"></tbody>
+                </table>
+            </section>
+
+            <!-- Reports & Active Alerts -->
+            <section id="reports" class="section">
+                <h2>Reports & Statistics</h2>
+                <div class="info-box">
+                    <h3>Total Faults Recorded:</h3>
+                    <p id="faultCount">Loading...</p>
+                </div>
+            </section>
+
+            <section id="active-alerts" class="section">
+                <h2>Active Alerts</h2>
+                <div id="faultList" class="fault-container"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- LEAFLET -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBP7QT4KNrLfrwCRA5Pm9bykIrapj0SotY",
+            authDomain: "zapsafe-gridwatch.firebaseapp.com",
+            databaseURL: "https://zapsafe-gridwatch-default-rtdb.firebaseio.com",
+            projectId: "zapsafe-gridwatch",
+            storageBucket: "zapsafe-gridwatch.appspot.com",
+            messagingSenderId: "398221480025",
+            appId: "1:398221480025:web:a011a5c6a260669f3ba148"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
+
+    <script>
+        // -----------------------------
+        // SHOW MAP & CONTROL PANEL
+        // -----------------------------
+        function showHomeView() {
+    document.getElementById("mainGrid").style.display = "grid";
+    document.getElementById("poleTableSection").style.display = "none";
+
+    document.getElementById("reports").style.display = "block";
+    document.getElementById("active-alerts").style.display = "block";
+}
+
+
+        // -----------------------------
+        // SHOW POLE TABLE
+        // -----------------------------
+        function showPoleTable() {
+    // hide everything except table
+    document.getElementById("mainGrid").style.display = "none";
+    document.getElementById("reports").style.display = "none";
+    document.getElementById("active-alerts").style.display = "none";
+
+    document.getElementById("poleTableSection").style.display = "block";
+}
+
+
+        document.getElementById("homeBtn").addEventListener("click", showHomeView);
+        document.getElementById("poleTagsToggle").addEventListener("click", showPoleTable);
+
+    </script>
+
+    <!-- POLE TAG MENU UPDATE + TABLE UPDATE -->
+    <script>
+        const poleTableBody = document.getElementById("poleTableBody");
+
+        db.ref("poles").on("value", snap => {
+            const data = snap.val() || {};
+            const menu = document.getElementById("poleTagsMenu");
+
+            menu.innerHTML = "";
+            poleTableBody.innerHTML = "";
+
+            for (let id in data) {
+                const p = data[id];
+
+                // Update dropdown menu
+                const li = document.createElement("li");
+                li.innerHTML = `<a href="#">Pole ID: ${p.id}</a>`;
+                menu.appendChild(li);
+
+                // Add row to table (dummy values for now)
+                poleTableBody.innerHTML += `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.lat}</td>
+                        <td>${p.lon}</td>
+                        <td>${p.tilt || "N/A"}</td>
+                        <td>${p.voltage || "N/A"}</td>
+                        <td>${p.current || "N/A"}</td>
+                        <td>${p.status || "Normal"}</td>
+                    </tr>
+                `;
+            }
+        });
+    </script>
+
+    <!-- MAP INITIALIZATION -->
+<script>
+    // Initialize Map
+    const map = L.map("mapid").setView([20.59, 78.96], 5);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+    const poleMarkers = {}; // store marker objects
+
+    // FETCH AND DISPLAY POLES FROM FIREBASE
+    db.ref("poles").on("value", snap => {
+        const data = snap.val() || {};
+
+        // Clear old markers
+        for (let id in poleMarkers) {
+            map.removeLayer(poleMarkers[id]);
+        }
+
+        for (let id in data) {
+            const pole = data[id];
+
+            // Create marker
+            const marker = L.marker([pole.lat, pole.lon])
+                .addTo(map)
+                .bindPopup(`<b>Pole ID:</b> ${pole.id}`);
+
+            poleMarkers[id] = marker;
+        }
+    });
+</script>
+<script>
+// ==============================
+// CLICK TABLE → ZOOM TO MARKER
+// ==============================
+document.getElementById("poleTableBody").addEventListener("click", function(e) {
+    const tr = e.target.closest("tr");
+    if (!tr) return;
+
+    const poleId = tr.children[0].innerText;
+    const lat = parseFloat(tr.children[1].innerText);
+    const lon = parseFloat(tr.children[2].innerText);
+
+    if (!isNaN(lat) && !isNaN(lon)) {
+        // Show Home (map) view
+        showHomeView();
+
+        setTimeout(() => {
+            map.setView([lat, lon], 16);
+            if (poleMarkers[poleId]) {
+                poleMarkers[poleId].openPopup();
+            }
+        }, 300);
+    }
+});
+
+// ==========================================
+// CUSTOM RED + BLUE ICONS FOR FAULT / NORMAL
+// ==========================================
+const blueIcon = L.icon({
+    iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png",
+    iconSize: [32, 32]
+});
+
+const redIcon = L.icon({
+    iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
+    iconSize: [32, 32]
+});
+
+// ==============================
+// UPDATE MARKERS WITH READINGS
+// ==============================
+db.ref("poles").on("value", snap => {
+    const data = snap.val() || {};
+
+    // remove old markers
+    for (let id in poleMarkers) {
+        map.removeLayer(poleMarkers[id]);
+    }
+
+    for (let id in data) {
+        const p = data[id];
+
+        const isFault =
+            (p.status && p.status.toLowerCase() === "fault") ||
+            (p.tilt && p.tilt > 30); // example condition
+
+        const iconToUse = isFault ? redIcon : blueIcon;
+
+        const popupHTML = `
+            <b>Pole ID:</b> ${p.id}<br>
+            <b>Latitude:</b> ${p.lat}<br>
+            <b>Longitude:</b> ${p.lon}<br><br>
+            <b>Tilt:</b> ${p.tilt || "N/A"}°<br>
+            <b>Voltage:</b> ${p.voltage || "N/A"} V<br>
+            <b>Current:</b> ${p.current || "N/A"} A<br>
+            <b>Status:</b> ${p.status || "Normal"}
+        `;
+
+        const marker = L.marker([p.lat, p.lon], { icon: iconToUse })
+            .addTo(map)
+            .bindPopup(popupHTML);
+
+        poleMarkers[id] = marker;
+    }
+});
+</script>
+
+</body>
+</html>

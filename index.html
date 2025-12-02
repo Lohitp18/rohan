@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZAPSAFE - GRIDWATCH Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <h1>ZAPSAFE - GRIDWATCH</h1>
+        <h2>Utility Pole Monitoring System</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" id="loginButton">Login</button>
+            <p id="loginMessage" style="color: red; margin-top: 10px;"></p>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const message = document.getElementById('loginMessage');
+
+            // Define User Credentials
+            const users = {
+                'rohan': '012345', // Admin
+                'user01': 'abcde' // Regular User
+            };
+
+            if (users[username] === password) {
+                // Successful login
+                message.textContent = 'Login successful! Redirecting...';
+                
+                // Store user role (simple method for this example)
+                const role = (username === 'rohan') ? 'admin' : 'user';
+                localStorage.setItem('userRole', role);
+
+                // Redirect to home page
+                window.location.href = 'home.html'; 
+            } else {
+                // Failed login
+                message.textContent = 'Invalid Username or Password.';
+            }
+        });
+    </script>
+</body>
+</html>

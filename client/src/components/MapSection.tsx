@@ -56,9 +56,22 @@ function MapSection({ poles, focusCoords }: MapSectionProps) {
             <Popup>
               <strong>Pole ID:</strong> {pole.id}
               <br />
-              <strong>Latitude:</strong> {pole.lat}
+              <strong>Latitude:</strong> {pole.lat.toFixed(6)}
               <br />
-              <strong>Longitude:</strong> {pole.lon}
+              <strong>Longitude:</strong> {pole.lon.toFixed(6)}
+              <br />
+              <br />
+              <strong>Voltage:</strong> {pole.voltage !== undefined ? `${pole.voltage.toFixed(2)} V` : "N/A"}
+              <br />
+              <strong>Current:</strong> {pole.current !== undefined ? `${pole.current.toFixed(2)} A` : "N/A"}
+              <br />
+              {pole.tilt !== undefined && (
+                <>
+                  <strong>Tilt:</strong> {pole.tilt.toFixed(2)}°
+                  <br />
+                </>
+              )}
+              <strong>Status:</strong> {pole.status ?? "Normal"}
             </Popup>
           </Marker>
         ))}

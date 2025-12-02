@@ -85,7 +85,7 @@ function AddPoleForm({ onAdd, disabled }: AddPoleFormProps) {
 
         {error && <p className="form-error">{error}</p>}
         <button type="submit" disabled={disabled}>
-          {disabled ? "Saving..." : "Add Pole and Save"}
+          {disabled ? "Saving..." : "Save"}
         </button>
       </form>
     </section>

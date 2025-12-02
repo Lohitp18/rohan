@@ -34,6 +34,13 @@ function Dashboard() {
     }
 
     fetchPoles();
+    
+    // Poll for updates every 5 seconds to get real-time sensor data from Arduino
+    const interval = setInterval(() => {
+      fetchPoles();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleAddPole = async (payload: AddPolePayload) => {

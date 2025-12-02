@@ -27,9 +27,9 @@ function PoleTable({ poles, onSelect }: PoleTableProps) {
               <td>{pole.id}</td>
               <td>{pole.lat.toFixed(4)}</td>
               <td>{pole.lon.toFixed(4)}</td>
-              <td>{pole.tilt ?? "N/A"}</td>
-              <td>{pole.voltage ?? "N/A"}</td>
-              <td>{pole.current ?? "N/A"}</td>
+              <td>{pole.tilt !== undefined ? `${pole.tilt.toFixed(2)}°` : "N/A"}</td>
+              <td>{pole.voltage !== undefined ? `${pole.voltage.toFixed(2)} V` : "N/A"}</td>
+              <td>{pole.current !== undefined ? `${pole.current.toFixed(2)} A` : "N/A"}</td>
               <td>{pole.status ?? "Normal"}</td>
             </tr>
           ))}
